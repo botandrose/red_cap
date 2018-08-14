@@ -70,7 +70,7 @@ module REDCap
 
       def options
         select_choices_or_calculations
-          .split("|")
+          .split(/\s*\|\s*/)
           .reduce({}) do |options, pair|
             _, key, value = *pair.match(/\A(\d+),(.+)\z/)
             options.merge key => value
