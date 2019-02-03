@@ -52,6 +52,7 @@ module REDCap
 
     class Text < Field; end
     class Notes < Field; end
+    class Descriptive < Field; end
     class Dropdown < Field; end
     class Sql < Field; end
 
@@ -60,6 +61,12 @@ module REDCap
         if responses[field_name].present?
           field_name
         end
+      end
+    end
+
+    class Yesno < Field
+      def value
+        super == "1"
       end
     end
 
