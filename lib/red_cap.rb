@@ -3,10 +3,12 @@ require "red_cap/client"
 require "red_cap/form"
 
 module REDCap
-  def self.configure
-    yield self
-  end
+  class << self
+    def configure
+      yield self
+    end
 
-  cattr_accessor :url, :token
+    attr_accessor :url, :token
+  end
 end
 
