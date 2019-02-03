@@ -2,7 +2,7 @@ require "active_support/core_ext/object/blank"
 
 module REDCap
   class Form
-    class Field < Struct.new(:form, :attributes, :responses)
+    class Field < Struct.new(:form, :attributes, :responses, :options)
       KEYS = [
         :field_name,
         :form_name,
@@ -66,7 +66,11 @@ module REDCap
 
     class Yesno < Field
       def value
-        super == "1"
+        if options.has_key?(:default) && super == ""
+          options[:default]
+        else
+          super == "1"
+        end
       end
     end
 
