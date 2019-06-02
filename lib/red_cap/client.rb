@@ -40,9 +40,15 @@ module REDCap
 
     def base_request options
       connection = Faraday.new(url: @url)
-      connection.post(nil, options.reverse_merge({
+      response = connection.post(nil, options.reverse_merge({
         token: @token,
       }))
+      if error_message = response.body[/<error>(.+?)<\/error>/, 1]
+        raise Error.new(error_message)
+      end
+      response
     end
+
+    class Error < StandardError; end
   end
 end
