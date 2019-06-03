@@ -51,7 +51,11 @@ module REDCap
     end
 
     class Text < Field; end
-    class Notes < Field; end
+    class Notes < Text
+      def text?
+        true
+      end
+    end
     class Descriptive < Field; end
     class Dropdown < Field; end
     class Sql < Field; end
@@ -109,16 +113,20 @@ module REDCap
     class CheckboxesWithOther < Checkboxes
       def value
         selected_options.map do |key, value|
-          if key == "501" # Other
-            "#{value}: #{other_text_field&.value}"
+          if other?(key)
+            "#{value}: #{other_text_field(key).value}"
           else
             value
           end
         end
       end
 
-      def other_text_field
-        associated_fields_for_key("501").find(&:text?)
+      def other_text_field key
+        associated_fields_for_key(key).find(&:text?)
+      end
+
+      def other? key
+        other_text_field(key)
       end
     end
 
@@ -127,11 +135,15 @@ module REDCap
 
     class CheckboxesWithRadioButtonsOrOther < CheckboxesWithOther
       def value
-        radio_values = selected_options.keys.map do |key|
-          radio_field_for(key).value
+        radio_or_other_values = selected_options.keys.map do |key|
+          if other?(key)
+            other_text_field(key)&.value
+          else
+            radio_field_for(key)&.value
+          end
         end
 
-        Hash[super.zip(radio_values)]
+        Hash[selected_options.values.zip(radio_or_other_values)]
       end
 
       private
@@ -150,7 +162,7 @@ module REDCap
         end
 
         if selected_options.keys.include?("501")
-          right[-1] = [other_text_field&.value]
+          right[-1] = [other_text_field("501")&.value]
         end
 
         Hash[left.zip(right)]
