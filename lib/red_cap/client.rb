@@ -40,6 +40,8 @@ module REDCap
 
     def base_request options
       connection = Faraday.new(url: @url)
+      connection.options.open_timeout = 300
+      connection.options.timeout = 300
       response = connection.post(nil, options.reverse_merge({
         token: @token,
       }))
