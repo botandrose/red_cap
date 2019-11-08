@@ -9,7 +9,13 @@ module REDCap
     end
 
     def records
-      json_api_request(content: "record")
+      study_ids =
+        json_api_request(content: "record", fields: "study_id")
+          .map { |hash| hash["study_id"] }
+
+      study_ids.in_groups_of(100, false).flat_map do |study_ids|
+        json_api_request(content: "record", records: study_ids.join(","))
+      end
     end
 
     def metadata
@@ -42,9 +48,7 @@ module REDCap
       connection = Faraday.new(url: @url)
       connection.options.open_timeout = 300
       connection.options.timeout = 300
-      response = connection.post(nil, options.reverse_merge({
-        token: @token,
-      }))
+      response = connection.post nil, options.reverse_merge(token: @token)
       if error_message = response.body[/<error>(.+?)<\/error>/, 1]
         raise Error.new(error_message)
       end
