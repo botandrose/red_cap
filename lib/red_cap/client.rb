@@ -8,9 +8,9 @@ module REDCap
       @token = token
     end
 
-    def records
+    def records filter=nil
       study_ids =
-        json_api_request(content: "record", fields: "study_id")
+        json_api_request(content: "record", fields: "study_id", filterLogic: filter)
           .map { |hash| hash["study_id"] }
 
       study_ids.in_groups_of(100, false).flat_map do |study_ids|
