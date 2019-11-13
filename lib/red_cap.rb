@@ -8,7 +8,11 @@ module REDCap
       yield self
     end
 
-    attr_accessor :url, :token
+    attr_accessor :url, :token, :per_page
+
+    def per_page
+      @per_page ||= 100
+    end
   end
 end
 

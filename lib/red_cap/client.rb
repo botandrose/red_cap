@@ -3,9 +3,10 @@ require "faraday"
 
 module REDCap
   class Client
-    def initialize url: REDCap.url, token: REDCap.token
+    def initialize url: REDCap.url, token: REDCap.token, per_page: REDCap.per_page
       @url = url
       @token = token
+      @per_page = per_page
     end
 
     def records filter=nil
@@ -13,7 +14,7 @@ module REDCap
         json_api_request(content: "record", fields: "study_id", filterLogic: filter)
           .map { |hash| hash["study_id"] }
 
-      study_ids.in_groups_of(100, false).flat_map do |study_ids|
+      study_ids.in_groups_of(@per_page, false).flat_map do |study_ids|
         json_api_request(content: "record", records: study_ids.join(","))
       end
     end
