@@ -3,12 +3,11 @@ require "active_support/core_ext/string/inflections"
 
 module REDCap
   class Form
-    def initialize data_dictionary, responses
+    def initialize data_dictionary
       @data_dictionary = data_dictionary
-      @responses = responses
     end
 
-    attr_reader :data_dictionary, :responses
+    attr_accessor :data_dictionary, :responses
 
     # field accessors
     def method_missing method, *args, **kwargs, &block
@@ -29,16 +28,21 @@ module REDCap
       field = fields.find { |field| field.field_name == key }
       field = field_class.new(field.attributes) if field_class
       field.options = options
-      field.associated_fields = fields.select do |field|
-        field.branching_logic =~ /^\[#{field.field_name}\(.+\)\]="1"$/
-      end
       field
     end
 
     def fields
-      @fields ||= data_dictionary.map do |attributes|
-        klass = lookup_field_class(attributes["field_type"])
-        klass.new(attributes)
+      @fields ||= begin
+        fs = data_dictionary.map do |attributes|
+          klass = lookup_field_class(attributes["field_type"])
+          klass.new(attributes)
+        end
+        fs.each do |field|
+          field.associated_fields = fs.select do |f|
+            f.branching_logic =~ /^\[#{field.field_name}\(.+\)\]="1"$/
+          end
+        end
+        fs
       end
     end
 
