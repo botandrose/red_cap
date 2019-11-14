@@ -2,7 +2,7 @@ require "active_support/core_ext/object/blank"
 
 module REDCap
   class Form
-    class Field < Struct.new(:attributes, :responses, :options, :associated_fields)
+    class Field < Struct.new(:attributes, :options, :associated_fields)
       KEYS = [
         :field_name,
         :form_name,
@@ -28,7 +28,7 @@ module REDCap
         end
       end
 
-      def value
+      def value responses
         responses[field_name]
       end
 
@@ -61,15 +61,15 @@ module REDCap
     class Sql < Field; end
 
     class File < Field
-      def value
-        if responses[field_name].present?
+      def value responses
+        if super.present?
           field_name
         end
       end
     end
 
     class Yesno < Field
-      def value
+      def value responses
         if options.has_key?(:default) && super == ""
           options[:default]
         else
@@ -79,8 +79,8 @@ module REDCap
     end
 
     class RadioButtons < Field
-      def value
-        options[responses[field_name]]
+      def value responses
+        options[super]
       end
 
       def options
@@ -97,13 +97,13 @@ module REDCap
     Radio = RadioButtons
 
     class Checkboxes < RadioButtons
-      def value
-        selected_options.values
+      def value responses
+        selected_options(responses).values
       end
 
       private
 
-      def selected_options
+      def selected_options responses
         options.select do |key, value|
           responses["#{field_name}___#{key}"] == "1"
         end
@@ -111,10 +111,10 @@ module REDCap
     end
 
     class CheckboxesWithOther < Checkboxes
-      def value
-        selected_options.map do |key, value|
+      def value responses
+        selected_options(responses).map do |key, value|
           if other?(key)
-            "#{value}: #{other_text_field(key).value}"
+            "#{value}: #{other_text_field(key).value(responses)}"
           else
             value
           end
@@ -134,16 +134,16 @@ module REDCap
     Checkbox = CheckboxesWithOther
 
     class CheckboxesWithRadioButtonsOrOther < CheckboxesWithOther
-      def value
-        radio_or_other_values = selected_options.keys.map do |key|
+      def value responses
+        radio_or_other_values = selected_options(responses).keys.map do |key|
           if other?(key)
-            other_text_field(key)&.value
+            other_text_field(key)&.value(responses)
           else
-            radio_field_for(key)&.value
+            radio_field_for(key)&.value(responses)
           end
         end
 
-        Hash[selected_options.values.zip(radio_or_other_values)]
+        Hash[selected_options(responses).values.zip(radio_or_other_values)]
       end
 
       private
@@ -154,15 +154,17 @@ module REDCap
     end
 
     class CheckboxesWithCheckboxesOrOther < CheckboxesWithOther
-      def value
-        left = selected_options.values
+      def value responses
+        left = selected_options(responses).values
 
-        right = selected_options.keys.map do |key|
-          checkbox_fields_for(key).map(&:value)
+        right = selected_options(responses).keys.map do |key|
+          checkbox_fields_for(key).map do |field|
+            field.value(responses)
+          end
         end
 
         if selected_options.keys.include?("501")
-          right[-1] = [other_text_field("501")&.value]
+          right[-1] = [other_text_field("501")&.value(responses)]
         end
 
         Hash[left.zip(right)]

@@ -19,7 +19,7 @@ module REDCap
         field_class = lookup_field_class(field_class.to_s)
       end
       if field = find_field(key, field_class, options)
-        field.value
+        field.value(responses)
       else
         super
       end
@@ -27,7 +27,7 @@ module REDCap
 
     def find_field key, field_class, options
       field = fields.find { |field| field.field_name == key }
-      field = field_class.new(field.attributes, responses) if field_class
+      field = field_class.new(field.attributes) if field_class
       field.options = options
       field.associated_fields = fields.select do |field|
         field.branching_logic =~ /^\[#{field.field_name}\(.+\)\]="1"$/
@@ -38,7 +38,7 @@ module REDCap
     def fields
       @fields ||= data_dictionary.map do |attributes|
         klass = lookup_field_class(attributes["field_type"])
-        klass.new(attributes, responses)
+        klass.new(attributes)
       end
     end
 
