@@ -2,7 +2,7 @@ require "active_support/core_ext/object/blank"
 
 module REDCap
   class Form
-    class Field < Struct.new(:form, :attributes, :responses, :options)
+    class Field < Struct.new(:attributes, :responses, :options, :associated_fields)
       KEYS = [
         :field_name,
         :form_name,
@@ -44,7 +44,7 @@ module REDCap
       private
 
       def associated_fields_for_key key
-        form.fields.select do |field|
+        associated_fields.select do |field|
           field.branching_logic == %{[#{field_name}(#{key})]="1"}
         end
       end
