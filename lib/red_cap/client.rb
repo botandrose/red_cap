@@ -10,12 +10,17 @@ module REDCap
     end
 
     def records filter=nil
-      study_ids =
-        json_api_request(content: "record", fields: "study_id", filterLogic: filter)
-          .map { |hash| hash["study_id"] }
-
-      study_ids.in_groups_of(@per_page, false).flat_map do |study_ids|
-        json_api_request(content: "record", records: study_ids.join(","))
+      enumerator = fetch_study_ids(filter).in_groups_of(@per_page, false)
+      if block_given?
+        enumerator.each do |study_ids|
+          json_api_request(content: "record", records: study_ids.join(",")).each do |record|
+            yield record
+          end
+        end
+      else
+        enumerator.flat_map do |study_ids|
+          json_api_request(content: "record", records: study_ids.join(","))
+        end
       end
     end
 
@@ -37,6 +42,11 @@ module REDCap
     File = Struct.new(:data, :type, :filename)
 
     private
+
+    def fetch_study_ids filter=nil
+      json_api_request(content: "record", fields: "study_id", filterLogic: filter)
+        .map { |hash| hash["study_id"] }
+    end
 
     def json_api_request options
       response = base_request(options.reverse_merge({
