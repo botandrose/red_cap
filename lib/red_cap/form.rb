@@ -1,7 +1,7 @@
 require "red_cap/form/fields"
 require "active_support/core_ext/string/inflections"
 
-module REDCap
+class REDCap
   class Form
     def initialize data_dictionary
       @data_dictionary = data_dictionary

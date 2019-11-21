@@ -1,7 +1,7 @@
 require "json"
 require "faraday"
 
-module REDCap
+class REDCap
   class Client
     def initialize url: REDCap.url, token: REDCap.token, per_page: REDCap.per_page
       @url = url
@@ -22,6 +22,10 @@ module REDCap
           json_api_request(content: "record", records: study_ids.join(","))
         end
       end
+    end
+
+    def find_record study_id
+      json_api_request(content: "record", records: study_id).first
     end
 
     def metadata

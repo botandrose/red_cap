@@ -1,6 +1,6 @@
 require "active_support/core_ext/object/blank"
 
-module REDCap
+class REDCap
   class Form
     class Field < Struct.new(:attributes, :options, :associated_fields)
       KEYS = [
