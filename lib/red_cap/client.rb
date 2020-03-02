@@ -64,8 +64,8 @@ class REDCap
       connection.options.open_timeout = 300
       connection.options.timeout = 300
       response = connection.post nil, options.reverse_merge(token: @token)
-      if error_message = response.body[/<error>(.+?)<\/error>/, 1]
-        raise Error.new(error_message)
+      if response.body =~ /^{"error":"/
+        raise Error.new(response.body)
       end
       response
     end
