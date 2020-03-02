@@ -28,6 +28,14 @@ class REDCap
       json_api_request(content: "record", records: study_id).first
     end
 
+    def save_records records
+      json_api_request(content: "record", data: records.to_json)
+    end
+
+    def delete_records study_ids
+      json_api_request(content: "record", action: "delete", records: study_ids)
+    end
+
     def metadata
       json_api_request(content: "metadata")
     end

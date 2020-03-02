@@ -34,6 +34,15 @@ class REDCap
     client.records(filters.join(" AND "), &block)
   end
 
+  def update study_id, attributes
+    record = attributes.merge(study_id: study_id).stringify_keys
+    client.save_records [record]
+  end
+
+  def delete study_id
+    client.delete_records [study_id]
+  end
+
   private
 
   def client
