@@ -29,7 +29,7 @@ class REDCap
     end
 
     def save_records records
-      json_api_request(content: "record", data: records.to_json)
+      json_api_request(content: "record", data: records.to_json, overwriteBehavior: "overwrite")
     end
 
     def delete_records study_ids
