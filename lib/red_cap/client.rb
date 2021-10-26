@@ -23,7 +23,7 @@ module REDCap
         record: record_id,
         field: file_id,
       })
-      _, type, filename = *response.headers["content-type"].match(/\A(.+); name=\"(.+)\"\z/)
+      _, type, filename = *response.headers["content-type"].match(/\A(.+); name=\"(.+)\"/)
       File.new(response.body, type, filename)
     end
 
