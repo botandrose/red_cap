@@ -15,6 +15,14 @@ class REDCap
     end
   end
 
+  def initialize url: REDCap.url, token: REDCap.token, per_page: REDCap.per_page
+    @url = url
+    @token = token
+    @per_page = per_page
+  end
+
+  attr_accessor :url, :token, :per_page
+
   def form
     @form ||= Form.new(client.metadata)
   end
@@ -46,7 +54,7 @@ class REDCap
   private
 
   def client
-    @client ||= Client.new
+    @client ||= Client.new(url: url, token: token, per_page: per_page)
   end
 end
 
