@@ -1,5 +1,6 @@
 require "json"
 require "faraday"
+require "red_cap/cache"
 
 class REDCap
   class Client
@@ -56,15 +57,23 @@ class REDCap
     private
 
     def fetch_study_ids filter=nil
-      json_api_request(content: "record", fields: "study_id", filterLogic: filter)
-        .map { |hash| hash["study_id"] }
+      json_api_request({
+        content: "record",
+        fields: "study_id",
+        filterLogic: filter,
+      }).map { |hash| hash["study_id"] }
     end
 
+    require "active_support/core_ext/object/to_query"
     def json_api_request options
-      response = base_request(options.reverse_merge({
-        format: "json",
-      }))
-      JSON.load(response.body)
+      full_url = @url + "?" + options.to_query
+      json = Cache.fetch(full_url) do
+        response = base_request(options.reverse_merge({
+          format: "json",
+        }))
+        response.body
+      end
+      JSON.load(json)
     end
 
     def base_request options

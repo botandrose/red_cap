@@ -8,7 +8,7 @@ class REDCap
       yield self
     end
 
-    attr_accessor :url, :token, :per_page
+    attr_accessor :url, :token, :per_page, :cache
 
     def per_page
       @per_page ||= 100
