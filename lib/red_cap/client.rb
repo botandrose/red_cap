@@ -41,12 +41,13 @@ class REDCap
       json_api_request(content: "metadata")
     end
 
-    def file record_id, file_id
+    def file record_id, file_id, event: nil
       response = base_request({
         content: "file",
         action: "export",
         record: record_id,
         field: file_id,
+        event: event,
       })
       _, type, filename = *response.headers["content-type"].match(/\A(.+); name=\"(.+)\"/)
       File.new(response.body, type, filename)
