@@ -51,8 +51,6 @@ class REDCap
     client.delete_records [study_id]
   end
 
-  private
-
   def client
     @client ||= Client.new(url: url, token: token, per_page: per_page)
   end
