@@ -57,7 +57,6 @@ class REDCap
       end
     end
     class Descriptive < Field; end
-    class Dropdown < Field; end
     class Sql < Field; end
 
     class File < Field
@@ -95,6 +94,8 @@ class REDCap
 
     # default "radio" implementation
     Radio = RadioButtons
+
+    class Dropdown < RadioButtons; end
 
     class Checkboxes < RadioButtons
       def value responses
