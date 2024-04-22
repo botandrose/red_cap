@@ -6,7 +6,7 @@ class REDCap
       dir = "tmp/redcap_cache"
       path = dir + "/#{key}"
 
-      if REDCap.cache && ::File.exists?(path)
+      if REDCap.cache && ::File.exist?(path)
         ::File.read(path)
       else
         raw = block.call
