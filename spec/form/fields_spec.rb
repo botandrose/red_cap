@@ -228,7 +228,16 @@ RSpec.describe REDCap::Form::CheckboxesWithOther do
       "select_choices_or_calculations" => "1,Reading | 2,Sports | 3,Other"
     }
   end
-  let(:field) { REDCap::Form::CheckboxesWithOther.new(attributes, {}, []) }
+  let(:associated_field) do
+    # Create associated text field that would match branching logic for key "3"
+    text_field = REDCap::Form::Text.new({
+      "field_name" => "hobbies_other_3",
+      "field_type" => "text",
+      "branching_logic" => '[hobbies(3)]="1"'
+    })
+    text_field
+  end
+  let(:field) { REDCap::Form::CheckboxesWithOther.new(attributes, {}, [associated_field]) }
 
   describe "#value" do
     it "returns regular options as-is" do
@@ -239,5 +248,127 @@ RSpec.describe REDCap::Form::CheckboxesWithOther do
       }
       expect(field.value(responses)).to eq(["Reading", "Sports"])
     end
+
+    it "includes other text when other option is selected" do
+      responses = {
+        "hobbies___1" => "1",
+        "hobbies___3" => "1",
+        "hobbies_other_3" => "Custom hobby"
+      }
+      expect(field.value(responses)).to eq(["Reading", "Other: Custom hobby"])
+    end
   end
 end
+
+RSpec.describe REDCap::Form::CheckboxesWithRadioButtonsOrOther do
+  let(:attributes) do
+    {
+      "field_name" => "symptoms",
+      "field_type" => "checkbox",
+      "select_choices_or_calculations" => "1,Headache | 2,Nausea | 3,Other"
+    }
+  end
+  let(:radio_field) do
+    REDCap::Form::RadioButtons.new({
+      "field_name" => "symptoms_radio_1",
+      "field_type" => "radio",
+      "field_label" => "Headache severity",
+      "select_choices_or_calculations" => "1,Mild | 2,Severe",
+      "branching_logic" => '[symptoms(1)]="1"'
+    })
+  end
+  let(:other_text_field) do
+    REDCap::Form::Text.new({
+      "field_name" => "symptoms_other_3",
+      "field_type" => "text",
+      "field_label" => "Other symptom",
+      "branching_logic" => '[symptoms(3)]="1"'
+    })
+  end
+  let(:field) { REDCap::Form::CheckboxesWithRadioButtonsOrOther.new(attributes, {}, [radio_field, other_text_field]) }
+
+  describe "#value" do
+    it "returns hash with checkbox options and their radio/other values" do
+      responses = {
+        "symptoms___1" => "1",
+        "symptoms___2" => "0",
+        "symptoms___3" => "1",
+        "symptoms_radio_1" => "2",
+        "symptoms_other_3" => "Dizziness"
+      }
+
+      expect(field.value(responses)).to eq({
+        "Headache" => "Severe",
+        "Other" => "Dizziness"
+      })
+    end
+
+    it "handles empty responses" do
+      responses = {}
+      expect(field.value(responses)).to eq({})
+    end
+  end
+end
+
+RSpec.describe REDCap::Form::CheckboxesWithCheckboxesOrOther do
+  let(:attributes) do
+    {
+      "field_name" => "medications",
+      "field_type" => "checkbox",
+      "select_choices_or_calculations" => "1,Aspirin | 2,Ibuprofen | 501,Other"
+    }
+  end
+  let(:checkbox_field1) do
+    REDCap::Form::Checkboxes.new({
+      "field_name" => "med_frequency_1",
+      "field_type" => "checkbox",
+      "select_choices_or_calculations" => "1,Daily | 2,Weekly",
+      "branching_logic" => '[medications(1)]="1"'
+    })
+  end
+  let(:checkbox_field2) do
+    REDCap::Form::Checkboxes.new({
+      "field_name" => "med_frequency_2",
+      "field_type" => "checkbox",
+      "select_choices_or_calculations" => "1,Daily | 2,As needed",
+      "branching_logic" => '[medications(2)]="1"'
+    })
+  end
+  let(:other_text_field) do
+    REDCap::Form::Text.new({
+      "field_name" => "medications_other_501",
+      "field_type" => "text",
+      "branching_logic" => '[medications(501)]="1"'
+    })
+  end
+  let(:field) { REDCap::Form::CheckboxesWithCheckboxesOrOther.new(attributes, {}, [checkbox_field1, checkbox_field2, other_text_field]) }
+
+  describe "#value" do
+    it "returns hash with checkbox options and their sub-checkbox values" do
+      responses = {
+        "medications___1" => "1",
+        "medications___2" => "1",
+        "med_frequency_1___1" => "1",
+        "med_frequency_2___2" => "1"
+      }
+
+      expect(field.value(responses)).to eq({
+        "Aspirin" => [["Daily"]],
+        "Ibuprofen" => [["As needed"]]
+      })
+    end
+
+    it "handles other option with text field" do
+      responses = {
+        "medications___1" => "0",
+        "medications___501" => "1",
+        "medications_other_501" => "Tylenol"
+      }
+
+      expect(field.value(responses)).to eq({
+        "Other" => ["Tylenol"]
+      })
+    end
+  end
+end
+

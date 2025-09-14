@@ -164,7 +164,7 @@ class REDCap
           end
         end
 
-        if selected_options.keys.include?("501")
+        if selected_options(responses).keys.include?("501")
           right[-1] = [other_text_field("501")&.value(responses)]
         end
 

@@ -28,7 +28,7 @@ class REDCap
     def find_field key, field_class, options
       field = fields.find { |field| field.field_name == key }
       field = field_class.new(field.attributes) if field_class
-      field.options = options
+      field.options = options if field
       field
     end
 

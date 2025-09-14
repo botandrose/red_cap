@@ -83,6 +83,19 @@ RSpec.describe REDCap::Form do
       it "raises NoMethodError" do
         expect { form.nonexistent_field }.to raise_error(NoMethodError)
       end
+
+      it "calls super when field is not found" do
+        # Use a form with minimal data dictionary to avoid the nil options issue
+        minimal_form = REDCap::Form.new([
+          {
+            "field_name" => "test_field",
+            "field_type" => "text"
+          }
+        ])
+
+        # Call a method that doesn't match any field to trigger super
+        expect { minimal_form.unknown_field_name }.to raise_error(NoMethodError, /undefined method `unknown_field_name'/)
+      end
     end
 
     context "with field_class override" do
