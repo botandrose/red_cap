@@ -18,6 +18,11 @@ class REDCap
         raw
       end
     end
+
+    def self.clear
+      dir = "tmp/redcap_cache"
+      FileUtils.rm_rf dir if ::File.exist?(dir)
+    end
   end
 end
 

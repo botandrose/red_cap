@@ -55,8 +55,6 @@ class REDCap
 
     File = Struct.new(:data, :type, :filename)
 
-    private
-
     def fetch_study_ids filter=nil
       json_api_request({
         content: "record",
@@ -66,16 +64,20 @@ class REDCap
     end
 
     require "active_support/core_ext/object/to_query"
-    def json_api_request options
-      full_url = @url + "?" + options.to_query
-      json = Cache.fetch(full_url) do
-        response = base_request(options.reverse_merge({
-          format: "json",
-        }))
-        response.body
+    def json_api_request options, cache: false
+      request_options = options.reverse_merge(format: "json")
+      json = if cache
+        full_url = @url + "?" + options.to_query
+        Cache.fetch(full_url) do
+          base_request(request_options).body
+        end
+      else
+        base_request(request_options).body
       end
       JSON.load(json)
     end
+
+    private
 
     def base_request options
       connection = Faraday.new(url: @url)
