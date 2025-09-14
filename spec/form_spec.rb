@@ -94,7 +94,7 @@ RSpec.describe REDCap::Form do
         ])
 
         # Call a method that doesn't match any field to trigger super
-        expect { minimal_form.unknown_field_name }.to raise_error(NoMethodError, /undefined method `unknown_field_name'/)
+        expect { minimal_form.unknown_field_name }.to raise_error(NoMethodError, /undefined method .unknown_field_name'/)
       end
     end
 
