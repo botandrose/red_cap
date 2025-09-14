@@ -3,8 +3,9 @@ require "active_support/core_ext/string/inflections"
 
 class REDCap
   class Form
-    def initialize data_dictionary
+    def initialize data_dictionary, responses=nil
       @data_dictionary = data_dictionary
+      @responses = responses
     end
 
     attr_accessor :data_dictionary, :responses
