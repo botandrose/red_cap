@@ -3,6 +3,8 @@ require "red_cap/client"
 require "red_cap/form"
 
 class REDCap
+  autoload :InstrumentTable, "red_cap/instrument_table"
+
   class << self
     def configure
       yield self
