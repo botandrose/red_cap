@@ -1,5 +1,8 @@
 require "bundler/setup"
+require "active_support/all"
 require "red_cap"
+require "digest"
+require "fileutils"
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
