@@ -1,5 +1,8 @@
 # REDCap
 
+![CI](https://github.com/botandrose/red_cap/workflows/CI/badge.svg)
+![Coverage](https://codecov.io/gh/botandrose/red_cap/branch/master/graph/badge.svg)
+
 A Ruby client library for connecting to REDCap (Research Electronic Data Capture) and parsing forms and data. REDCap is a secure web application for building and managing online surveys and databases, particularly for research studies.
 
 ## Features
