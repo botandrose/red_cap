@@ -230,21 +230,27 @@ RSpec.describe REDCap::Client do
       expect(client).to have_received(:base_request).with(options.merge(format: "json"))
       expect(JSON).to have_received(:load).with(json_response)
     end
+  end
 
-    context "with caching enabled" do
-      let(:full_url) { "#{url}?content=record&format=json" }
+  describe "#cached_json_api_request" do
+    let(:options) { {content: "record"} }
+    let(:json_response) { '[{"study_id": "001"}]' }
+    let(:full_url) { "#{url}?content=record&format=json" }
 
-      before do
-        allow(REDCap::Cache).to receive(:fetch).and_yield.and_return(json_response)
-        allow(options).to receive(:to_query).and_return("content=record&format=json")
-      end
+    before do
+      allow(response).to receive(:body).and_return(json_response)
+      allow(client).to receive(:base_request).and_return(response)
+      allow(JSON).to receive(:load).with(json_response).and_return([{"study_id" => "001"}])
+      allow(REDCap::Cache).to receive(:fetch).and_yield.and_return(json_response)
+      allow(options).to receive(:to_query).and_return("content=record&format=json")
+    end
 
-      it "uses cache when enabled" do
-        result = client.json_api_request(options, cache: true)
+    it "uses cache and parses JSON response" do
+      result = client.cached_json_api_request(options)
 
-        expect(result).to eq([{"study_id" => "001"}])
-        expect(REDCap::Cache).to have_received(:fetch).with(full_url)
-      end
+      expect(result).to eq([{"study_id" => "001"}])
+      expect(REDCap::Cache).to have_received(:fetch).with(full_url)
+      expect(JSON).to have_received(:load).with(json_response)
     end
   end
 
