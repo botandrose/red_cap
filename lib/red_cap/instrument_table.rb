@@ -27,10 +27,10 @@ class REDCap
         fields: [config[:key]] + config[:fields],
       })
 
-      metadata = client.json_api_request({
+      metadata = client.cached_json_api_request({
         content: "metadata",
         fields: config[:fields],
-      }, cache: true)
+      })
 
       client.json_api_request(filter).map do |response|
         if config[:repeating]

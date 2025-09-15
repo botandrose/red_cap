@@ -64,14 +64,16 @@ class REDCap
     end
 
     require "active_support/core_ext/object/to_query"
-    def json_api_request options, cache: false
+    def json_api_request options
       request_options = options.reverse_merge(format: "json")
-      json = if cache
-        full_url = @url + "?" + options.to_query
-        Cache.fetch(full_url) do
-          base_request(request_options).body
-        end
-      else
+      json = base_request(request_options).body
+      JSON.load(json)
+    end
+
+    def cached_json_api_request options
+      full_url = @url + "?" + options.to_query
+      json = Cache.fetch(full_url) do
+        request_options = options.reverse_merge(format: "json")
         base_request(request_options).body
       end
       JSON.load(json)
