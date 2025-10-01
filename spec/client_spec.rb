@@ -166,7 +166,8 @@ RSpec.describe REDCap::Client do
         action: "export",
         record: "001",
         field: "photo",
-        event: nil
+        event: nil,
+        repeat_instance: nil,
       })
     end
 
@@ -178,7 +179,8 @@ RSpec.describe REDCap::Client do
         action: "export",
         record: "001",
         field: "photo",
-        event: "baseline_arm_1"
+        event: "baseline_arm_1",
+        repeat_instance: nil,
       })
     end
   end
