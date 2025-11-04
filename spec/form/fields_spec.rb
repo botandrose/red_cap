@@ -59,6 +59,48 @@ RSpec.describe REDCap::Form::Field do
       end
     end
   end
+
+  describe "#tags" do
+    context "when field_annotation contains tags" do
+      it "returns array of tags" do
+        attributes["field_annotation"] = "@HIDDEN @ACTION-TAG @TEST123"
+        field = REDCap::Form::Field.new(attributes)
+
+        expect(field.tags).to eq(["@HIDDEN", "@ACTION-TAG", "@TEST123"])
+      end
+
+      it "handles mixed case by only matching uppercase" do
+        attributes["field_annotation"] = "@VALID @lowercase invalid @ANOTHER-1"
+        field = REDCap::Form::Field.new(attributes)
+
+        expect(field.tags).to eq(["@VALID", "@ANOTHER-1"])
+      end
+    end
+
+    context "when field_annotation has no tags" do
+      it "returns empty array" do
+        attributes["field_annotation"] = "This is just a regular annotation"
+        field = REDCap::Form::Field.new(attributes)
+
+        expect(field.tags).to eq([])
+      end
+    end
+
+    context "when field_annotation is blank" do
+      it "returns empty array" do
+        expect(field.tags).to eq([])
+      end
+    end
+
+    context "when field_annotation is nil" do
+      it "returns empty array" do
+        attributes["field_annotation"] = nil
+        field = REDCap::Form::Field.new(attributes)
+
+        expect(field.tags).to eq([])
+      end
+    end
+  end
 end
 
 RSpec.describe REDCap::Form::Text do

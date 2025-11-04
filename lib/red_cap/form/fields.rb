@@ -41,6 +41,14 @@ class REDCap
         end
       end
 
+      def tags
+        if field_annotation.present?
+          field_annotation.scan(Regexp.new("@[A-Z0-9\\-]+"))
+        else
+          []
+        end
+      end
+
       private
 
       def associated_fields_for_key key
