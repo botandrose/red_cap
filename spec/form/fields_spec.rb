@@ -1,3 +1,5 @@
+require "red_cap/form/fields"
+
 RSpec.describe REDCap::Form::Field do
   let(:attributes) do
     {
@@ -188,7 +190,7 @@ RSpec.describe REDCap::Form::RadioButtons do
     {
       "field_name" => "gender",
       "field_type" => "radio",
-      "select_choices_or_calculations" => "1,Male | 2,Female | 3,Other"
+      "select_choices_or_calculations" => "1,Male | 2,Female | 2_1,Shemale | 3,Other"
     }
   end
   let(:field) { REDCap::Form::RadioButtons.new(attributes) }
@@ -207,7 +209,7 @@ RSpec.describe REDCap::Form::RadioButtons do
 
   describe "#options" do
     it "parses select choices into hash" do
-      expected = { "1" => "Male", "2" => "Female", "3" => "Other" }
+      expected = { "1" => "Male", "2" => "Female", "2_1" => "Shemale", "3" => "Other" }
       expect(field.options).to eq(expected)
     end
   end

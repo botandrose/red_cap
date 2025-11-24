@@ -94,7 +94,7 @@ class REDCap
         select_choices_or_calculations
           .split(/\s*\|\s*/)
           .reduce({}) do |options, pair|
-            _, key, value = *pair.match(/\A(\d+),(.+)\z/)
+            _, key, value = *pair.match(/\A([^,]+),(.+)\z/)
             options.merge key => value
           end
       end
