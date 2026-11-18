@@ -232,6 +232,23 @@ RSpec.describe REDCap::Client do
       expect(client).to have_received(:base_request).with(options.merge(format: "json"))
       expect(JSON).to have_received(:load).with(json_response)
     end
+
+    context "when REDCap sends something other than JSON" do
+      let(:json_response) { %(<div class="error">\n  REDCap is down for maintenance#{" until further notice" * 20}</div>) }
+
+      before do
+        allow(JSON).to receive(:load).and_call_original
+      end
+
+      it "raises a JSON::ParserError that quotes the start of the body" do
+        expect {
+          client.json_api_request(options)
+        }.to raise_error(REDCap::Client::NonJSONResponseError, %r{\AREDCap sent a response that isn't JSON: <div class="error"> REDCap is down for maintenance until further notice.{100,}\.\.\.\z}) { |error|
+          expect(error).to be_a(JSON::ParserError)
+          expect(error).not_to be_a(REDCap::Client::Error)
+        }
+      end
+    end
   end
 
   describe "#cached_json_api_request" do

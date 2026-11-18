@@ -68,7 +68,7 @@ class REDCap
     def json_api_request options
       request_options = options.reverse_merge(format: "json")
       json = base_request(request_options).body
-      JSON.load(json)
+      parse json
     end
 
     def cached_json_api_request options
@@ -77,10 +77,17 @@ class REDCap
         request_options = options.reverse_merge(format: "json")
         base_request(request_options).body
       end
-      JSON.load(json)
+      parse json
     end
 
     private
+
+    require "active_support/core_ext/string/filters"
+    def parse json
+      JSON.load(json)
+    rescue JSON::ParserError
+      raise NonJSONResponseError, "REDCap sent a response that isn't JSON: #{json.squish.truncate(200)}"
+    end
 
     def base_request options
       connection = Faraday.new(url: @url)
@@ -94,5 +101,8 @@ class REDCap
     end
 
     class Error < StandardError; end
+
+    # a JSON::ParserError, so callers that rescue Error don't mistake a broken REDCap for an API refusal
+    class NonJSONResponseError < JSON::ParserError; end
   end
 end
