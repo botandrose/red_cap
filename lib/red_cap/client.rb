@@ -83,10 +83,16 @@ class REDCap
     private
 
     require "active_support/core_ext/string/filters"
+    require "cgi/escape"
     def parse json
       JSON.load(json)
     rescue JSON::ParserError
-      raise NonJSONResponseError, "REDCap sent a response that isn't JSON: #{json.squish.truncate(200)}"
+      if json.lstrip.start_with?("<")
+        text = json.gsub(%r{<(script|style)\b.*?</\1\s*>}mi, " ").gsub(/<[^>]*>/, " ")
+        raise NonJSONResponseError, "REDCap sent an HTML error instead of JSON: #{CGI.unescapeHTML(text).squish.truncate(1000)}"
+      else
+        raise NonJSONResponseError, "REDCap sent a response that isn't JSON: #{json.squish.truncate(200)}"
+      end
     end
 
     def base_request options

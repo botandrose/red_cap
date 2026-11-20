@@ -234,7 +234,7 @@ RSpec.describe REDCap::Client do
     end
 
     context "when REDCap sends something other than JSON" do
-      let(:json_response) { %(<div class="error">\n  REDCap is down for maintenance#{" until further notice" * 20}</div>) }
+      let(:json_response) { "Service Unavailable:\n  REDCap is down for maintenance#{" until further notice" * 20}" }
 
       before do
         allow(JSON).to receive(:load).and_call_original
@@ -243,9 +243,64 @@ RSpec.describe REDCap::Client do
       it "raises a JSON::ParserError that quotes the start of the body" do
         expect {
           client.json_api_request(options)
-        }.to raise_error(REDCap::Client::NonJSONResponseError, %r{\AREDCap sent a response that isn't JSON: <div class="error"> REDCap is down for maintenance until further notice.{100,}\.\.\.\z}) { |error|
+        }.to raise_error(REDCap::Client::NonJSONResponseError, %r{\AREDCap sent a response that isn't JSON: Service Unavailable: REDCap is down for maintenance until further notice.{100,}\.\.\.\z}) { |error|
           expect(error).to be_a(JSON::ParserError)
           expect(error).not_to be_a(REDCap::Client::Error)
+        }
+      end
+    end
+
+    context "when REDCap sends its red HTML error box" do
+      let(:json_response) { <<~HTML }
+        <div style="font: normal 12px Verdana, Arial;padding:20px;border: 1px solid red;color: #800000;max-width: 600px;background: #FFE1E1;">
+          <div style="font-weight:bold;font-size:15px;padding-bottom:5px;">
+            REDCap crashed due to an unexpected error!
+          </div>
+          <div>
+            <b>Error message:</b> You don&#039;t have the &quot;API Export&quot; right &amp; can&#39;t export instruments.<br>
+            <b>File:</b> /var/www/redcap/redcap_v15.5.20/API/index.php<br>
+            <b>Line:</b> 42
+          </div>
+        </div>
+      HTML
+
+      before do
+        allow(JSON).to receive(:load).and_call_original
+      end
+
+      it "raises with the box's text, stripped of markup, so the reason survives truncation" do
+        expect {
+          client.json_api_request(options)
+        }.to raise_error(REDCap::Client::NonJSONResponseError, %(REDCap sent an HTML error instead of JSON: REDCap crashed due to an unexpected error! Error message: You don't have the "API Export" right & can't export instruments. File: /var/www/redcap/redcap_v15.5.20/API/index.php Line: 42))
+      end
+    end
+
+    context "when REDCap sends a full HTML page" do
+      let(:json_response) do
+        <<~HTML
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <style>.red { color: #800000; }</style>
+              <script>var app_path_webroot = '/redcap_v15.5.20/';</script>
+            </head>
+            <body><div class="red">#{"The REDCap API is offline for maintenance. " * 40}</div></body>
+          </html>
+        HTML
+      end
+
+      before do
+        allow(JSON).to receive(:load).and_call_original
+      end
+
+      it "leaves out scripts and styles, and quotes up to 1000 characters of the text" do
+        expect {
+          client.json_api_request(options)
+        }.to raise_error(REDCap::Client::NonJSONResponseError) { |error|
+          expect(error.message).to start_with("REDCap sent an HTML error instead of JSON: The REDCap API is offline for maintenance.")
+          expect(error.message).not_to include("color", "app_path_webroot")
+          expect(error.message.delete_prefix("REDCap sent an HTML error instead of JSON: ").length).to eq(1000)
+          expect(error.message).to end_with("...")
         }
       end
     end
